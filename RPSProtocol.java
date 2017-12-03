@@ -97,6 +97,7 @@ public class RPSProtocol
 
 	private void SetUpPlayers() {
 		System.out.println("Setting up players.");
+		done = false;
 		if (playerOne) {
 			gameFrame.HideGuessing();
 			gameFrame.writeMessage("I'm player one. I'll be picking the word.\n");
@@ -127,9 +128,7 @@ public class RPSProtocol
 	}
 
 	private void respondTo(String line){
-		if (line == null)
-			return;
-		System.out.println(line);
+
 		String[] words = line.split(":", 2);	
 		if(words.length <= 1) {
 			System.out.println("Blank line received");
@@ -193,7 +192,7 @@ public class RPSProtocol
 			}
 			/* Player one (word picker)  lose condition. Player two guesses the word.*/
 			if (numGuessed == guessedLetters.length) {
-				out.println("WON: You won! The word was: " + wordToGuess);
+				out.println("WON: You won! The word was: " + wordToGuess + "\n");
 				gameFrame.writeMessage("They guessed your word, you lose! (" + wordToGuess + ")\n Starting a new game as "
 						+ "player two.\n"
 						+ "<--------------------->\n");
@@ -211,7 +210,7 @@ public class RPSProtocol
 			if (guessTries <= 0) {
 				gameFrame.writeMessage("You win! Starting a new game as player two.\n"
 						+ "<--------------------->\n");
-				out.println("LOST:Yeah.. you lost. Starting new game as player one.");
+				out.println("LOST:The stick figure has been hung! The word was: " + wordToGuess);
 				done = true;
 			}
 			else {

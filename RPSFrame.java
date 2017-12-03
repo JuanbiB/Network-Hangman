@@ -95,7 +95,7 @@ public class RPSFrame extends JFrame
 	
 	public String getGuess(){
 		String guess = letterGuess.getText().trim().toLowerCase();
-		letterGuess.setText("");
+		letterGuess.setText("   ");
 		return guess;
 	}
 	
