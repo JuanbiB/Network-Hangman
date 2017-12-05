@@ -7,18 +7,16 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 
-public class RPSFrame extends JFrame
+public class HangmanFrame extends JFrame
 {
-
+	
 	private JButton quitButton;
-	private JLabel otherNameLabel;
 	private JTextArea messageArea;
 	private JScrollPane messagePane;
 	private String myChoice;
 	private String myName;
 	private String otherName;
 	private JPanel buttonPanel;
-	private JTextField statusField;
 	private JMenuBar menuBar;
 	private JMenu connectMenu;
 	private JMenuItem listenItem;
@@ -31,7 +29,7 @@ public class RPSFrame extends JFrame
 	private JLabel letterGuessLabel;
 	private JButton guessButton;
 
-	RPSFrame()
+	HangmanFrame()
 	{
 		enableEvents(AWTEvent.WINDOW_EVENT_MASK);
 		//    setSize(400,200);
@@ -142,7 +140,7 @@ public class RPSFrame extends JFrame
 	}
 
 	public static void main(String[] args){
-		RPSFrame frame = new RPSFrame();
+		HangmanFrame frame = new HangmanFrame();
 		frame.setVisible(true);
 	}
 
