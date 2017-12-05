@@ -12,6 +12,8 @@ import javax.swing.*;
 
 public class HangmanProtocol 
 {
+	private int hung = 0;
+	private int guessesLeft = 6;
 	private HangmanFrame gameFrame;
 	private BufferedReader in;
 	private PrintWriter out;
@@ -151,6 +153,9 @@ public class HangmanProtocol
 		}
 		else if (msgID.equals("READY")){
 			gameFrame.writeMessage("Other player picked word, you can start guessing!");
+			//here
+			//String x = Integer.toString(wordToGuess.length());
+			//gameFrame.writeMessage("Word is of length " + x);
 		}
 		/* Guess message will only be received by player one. Check 
 		 * guessCharacter method for details. */
@@ -164,11 +169,12 @@ public class HangmanProtocol
 		}
 		// Here we would draw a body part of the stick man.
 		else if (msgID.equals("NOTFOUND")) {
-			int guessesLeft = Integer.parseInt(msg);
+			guessesLeft = Integer.parseInt(msg);
 			drawStickFigure(guessesLeft);
 			gameFrame.writeMessage("That letter doesn't exist in the word. I have " + msg + " guesses left.");
 		}
 		else if (msgID.equals("WON") || msgID.equals("LOST")){
+			if(msgID.equals("LOST")) drawStickFigure(hung);
 			gameFrame.writeMessage(msgID);
 			gameFrame.writeMessage("Starting new game as player one.\n"
 					+ "<--------------------->\n");
@@ -225,10 +231,12 @@ public class HangmanProtocol
 		if (!done){
 			gameFrame.writeMessage(otherName + " guessed: " + words[1]);
 			gameFrame.writeMessage("Their progress: " +  Arrays.toString(guessedLetters));
+			drawStickFigure(guessTries);
 			gameFrame.writeMessage("\nWaiting for them to guess a letter...");
 		}
 		else {
 			/* Switch from word picker to guesser.*/
+			//drawStickFigure(guessTries);
 			playerOne = !playerOne;
 			SetUpPlayers();
 		}
@@ -243,7 +251,7 @@ public class HangmanProtocol
 								 + "|\t O\n"
 								 + "|\t-|-\n"
 								 + "|\t  |\n"
-								 + "|\t/   \\\n"
+								 + "|\t/  \\\n"
 								 + "|_____________________________\n");
 			break;
 		case(1):
