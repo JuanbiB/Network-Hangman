@@ -1,12 +1,12 @@
 /*
-	RPSConnectFrame -- provides a dialog box used by the Hangman 	application to request up a connection.
+	RPSConnectFrame -- provides a dialog box used by the Rock Paper Scissors 	application to request up a connection.
  */
 
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-public class WordGuessDialog extends JDialog
+public class RPSWordGuessDialog extends JDialog
 {
 	private JButton connectButton;
 	private JButton cancelButton;
@@ -18,7 +18,7 @@ public class WordGuessDialog extends JDialog
 	private JPanel buttonPane = new JPanel();
 	
 	/* The constructor sets up the GUI components. */
-	WordGuessDialog(HangmanFrame owner, String title, boolean modal)
+	RPSWordGuessDialog(RPSFrame owner, String title, boolean modal)
 	{
 		super(owner, title, modal);
 		

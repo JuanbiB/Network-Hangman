@@ -10,16 +10,16 @@ import java.io.*;
 
 import javax.swing.*;
 
-public class RPSProtocol 
+public class HangmanProtocol 
 {
-	private RPSFrame gameFrame;
+	private HangmanFrame gameFrame;
 	private BufferedReader in;
 	private PrintWriter out;
 	private String name;
 	private String otherName;
 	private boolean alive=true;
 	private Thread socketReader;
-	private RPSWordGuessDialog guessDialog;
+	private WordGuessDialog guessDialog;
 
 	private String wordToGuess;
 	private char[] guessedLetters;
@@ -32,7 +32,7 @@ public class RPSProtocol
 	/* Hangman */
 	private boolean playerOne;
 
-	RPSProtocol(Socket gameSocket, RPSFrame frame, boolean playerOne)
+	HangmanProtocol(Socket gameSocket, HangmanFrame frame, boolean playerOne)
 	{
 		this.gameFrame = frame;
 		this.playerOne = playerOne;
@@ -101,7 +101,7 @@ public class RPSProtocol
 		if (playerOne) {
 			gameFrame.HideGuessing();
 			gameFrame.writeMessage("I'm player one. I'll be picking the word.\n");
-			guessDialog = new RPSWordGuessDialog(gameFrame, "Word Guess", true);
+			guessDialog = new WordGuessDialog(gameFrame, "Word Guess", true);
 			guessDialog.addGuessListener(new ActionListener(){
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -151,7 +151,6 @@ public class RPSProtocol
 		}
 		else if (msgID.equals("READY")){
 			gameFrame.writeMessage("Other player picked word, you can start guessing!");
-			
 		}
 		/* Guess message will only be received by player one. Check 
 		 * guessCharacter method for details. */
@@ -159,16 +158,18 @@ public class RPSProtocol
 			handleGuess(words);
 		}
 		else if (msgID.equals("FOUND")){
+			//int guessesLeft = Integer.parseInt(msg);
+			//drawStickFigure(guessesLeft);
 			gameFrame.writeMessage(msg);
 		}
 		// Here we would draw a body part of the stick man.
 		else if (msgID.equals("NOTFOUND")) {
 			int guessesLeft = Integer.parseInt(msg);
-			gameFrame.writeMessage("That letter doesn't exist in the word. I have " + msg + " guesses left.");
 			drawStickFigure(guessesLeft);
+			gameFrame.writeMessage("That letter doesn't exist in the word. I have " + msg + " guesses left.");
 		}
 		else if (msgID.equals("WON") || msgID.equals("LOST")){
-			gameFrame.writeMessage(msg);
+			gameFrame.writeMessage(msgID);
 			gameFrame.writeMessage("Starting new game as player one.\n"
 					+ "<--------------------->\n");
 			playerOne = !playerOne;
@@ -180,6 +181,7 @@ public class RPSProtocol
 		else {
 			System.out.println("Received unknown message: "+line);
 		}
+		
 	}
 
 	private void handleGuess(String[] words) {
