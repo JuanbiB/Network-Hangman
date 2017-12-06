@@ -27,7 +27,10 @@ public class HangmanProtocol
 	HashSet<String> guessedAlready; 
 	int guessTries;
 	private static int GUESSTRIES = 6;
-	boolean done;
+	boolean matchFinished;
+	private int myScore = 0;
+	private int opponentScore = 0;
+	private static int sleepTime = 3000;
 
 	/* Hangman */
 	private boolean playerOne;
@@ -37,31 +40,9 @@ public class HangmanProtocol
 		this.gameFrame = frame;
 		this.playerOne = playerOne;
 		name = frame.getName();
-		done = false;
+		matchFinished = false;
 
-		gameFrame.addGuessButtonListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				guessCharacter();
-			}
-		});
-
-		gameFrame.addQuitButtonListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e){
-				out.println("QUIT:QUIT");
-				alive=false;
-				out.close();
-				System.exit(0);
-			}
-		});
-
-		gameFrame.addWindowClosingListener(new WindowAdapter(){
-			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-				out.println("QUIT");
-				alive=false;
-				out.close();
-				System.exit(0);
-			}
-		});
+		addButtonListeners();
 
 		try {
 			in = new BufferedReader(new InputStreamReader(gameSocket.getInputStream()));
@@ -97,7 +78,7 @@ public class HangmanProtocol
 
 	private void SetUpPlayers() {
 		System.out.println("Setting up players.");
-		done = false;
+		matchFinished = false;
 		if (playerOne) {
 			gameFrame.HideGuessing();
 			gameFrame.writeMessage("I'm player one. I'll be picking the word.\n");
@@ -108,17 +89,28 @@ public class HangmanProtocol
 					wordToGuess = guessDialog.getGuessWord();
 					gameFrame.writeMessage("Player two will have to guess: " + wordToGuess);
 					guessDialog.setVisible(false);
-					out.println("READY:READY");
+					out.println("READY:" + Integer.toString(wordToGuess.length()));
 				}
 			});
 			guessDialog.setVisible(true);
-			guessedLetters = new char[wordToGuess.length()];
+			if (wordToGuess == null) {
+				alive = false;
+				out.print("QUIT:QUIT");
+			}
+			
+			/* wordToGuess will be null if a player doens't pick a word and
+			 * exits. */
+			if (wordToGuess != null) {
+				guessedLetters = new char[wordToGuess.length()];
+				for (int i = 0 ; i < guessedLetters.length; i++) {
+					guessedLetters[i] = '_';
+				}
+			}
+			
 			numGuessed = 0;
 			guessTries = GUESSTRIES;
 			guessedAlready = new HashSet<String>();
-			for (int i = 0 ; i < guessedLetters.length; i++) {
-				guessedLetters[i] = '_';
-			}
+
 		}
 		else {
 			gameFrame.writeMessage("I'm player two, I'll be guessing the word.\n Waiting on other player to pick word...");
@@ -130,10 +122,11 @@ public class HangmanProtocol
 	private void respondTo(String line){
 
 		String[] words = line.split(":", 2);	
-		if(words.length <= 1) {
+		if(words.length < 1) {
 			System.out.println("Blank line received");
 			return;
 		}
+		
 		String msgID = words[0];
 		String msg = words[1];
 		
@@ -151,6 +144,7 @@ public class HangmanProtocol
 		}
 		else if (msgID.equals("READY")){
 			gameFrame.writeMessage("Other player picked word, you can start guessing!");
+			gameFrame.writeMessage("The length of the word is: " + msg);
 		}
 		/* Guess message will only be received by player one. Check 
 		 * guessCharacter method for details. */
@@ -169,9 +163,26 @@ public class HangmanProtocol
 			gameFrame.writeMessage("That letter doesn't exist in the word. I have " + msg + " guesses left.");
 		}
 		else if (msgID.equals("WON") || msgID.equals("LOST")){
-			gameFrame.writeMessage(msgID);
+			gameFrame.writeMessage("\n" + msgID);
+			
+			if (msgID.equals("WON")) {
+				myScore++;
+			}
+			else {
+				opponentScore++;
+			}
+			
+			gameFrame.writeMessage("My score: " + Integer.toString(myScore));
+			gameFrame.writeMessage("Their score: " + Integer.toString(opponentScore));
 			gameFrame.writeMessage("Starting new game as player one.\n"
 					+ "<--------------------->\n");
+			/* Sleeping thread so player has some time to read outcome before next 
+			 * match. */
+			try {
+				Thread.sleep(sleepTime);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			playerOne = !playerOne;
 			SetUpPlayers();
 		}
@@ -195,11 +206,21 @@ public class HangmanProtocol
 			}
 			/* Player one (word picker)  lose condition. Player two guesses the word.*/
 			if (numGuessed == guessedLetters.length) {
-				out.println("WON: You won! The word was: " + wordToGuess + "\n");
-				gameFrame.writeMessage("They guessed your word, you lose! (" + wordToGuess + ")\n Starting a new game as "
+				out.println("WON: You WON! The word was: " + wordToGuess + "\n");
+				opponentScore++;
+				
+				gameFrame.writeMessage("My score: " + Integer.toString(myScore));
+				gameFrame.writeMessage("Their score: " + Integer.toString(opponentScore));
+				
+				gameFrame.writeMessage("\nYou LOSE, they guessed your word(" + wordToGuess + ")\n Starting a new game as "
 						+ "player two.\n"
 						+ "<--------------------->\n");
-				done = true;
+				try {
+					Thread.sleep(sleepTime);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				matchFinished = true;
 			}
 			else {
 				out.println("FOUND:You guessed character: " + guess + ". Progress: " + 
@@ -211,10 +232,17 @@ public class HangmanProtocol
 			 * is drawn and hung. */
 			guessTries--;
 			if (guessTries <= 0) {
-				gameFrame.writeMessage("You win! Starting a new game as player two.\n"
-						+ "<--------------------->\n");
+				myScore++;
+				gameFrame.writeMessage("You win! Starting a new game as player two...");
+				gameFrame.writeMessage("My score: " + Integer.toString(myScore));
+				gameFrame.writeMessage("Their score: " + Integer.toString(opponentScore));
 				out.println("LOST:The stick figure has been hung! The word was: " + wordToGuess);
-				done = true;
+				try {
+					Thread.sleep(sleepTime);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				matchFinished = true;
 			}
 			else {
 				gameFrame.writeMessage("Whoops, that letter doesn't exist! They have " + Integer.toString(guessTries) + 
@@ -222,9 +250,10 @@ public class HangmanProtocol
 				out.println("NOTFOUND:" + Integer.toString(guessTries));
 			}
 		}
-		if (!done){
+		if (!matchFinished){
 			gameFrame.writeMessage(otherName + " guessed: " + words[1]);
 			gameFrame.writeMessage("Their progress: " +  Arrays.toString(guessedLetters));
+			drawStickFigure(guessTries);
 			gameFrame.writeMessage("\nWaiting for them to guess a letter...");
 		}
 		else {
@@ -302,13 +331,39 @@ public class HangmanProtocol
 		break;
 		}
 	}
-
+	
 	private void doPartnerQuit(){
 		out.close();
 		gameFrame.writeMessage(otherName+" has left the game");
 		JOptionPane.showMessageDialog(gameFrame,
 				otherName+" has left the game.  Exiting", "Exit", JOptionPane.PLAIN_MESSAGE);
 		System.exit(0);
+	}
+	
+	private void addButtonListeners(){
+		gameFrame.addGuessButtonListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				guessCharacter();
+			}
+		});
+
+		gameFrame.addQuitButtonListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				out.println("QUIT:QUIT");
+				alive=false;
+				out.close();
+				System.exit(0);
+			}
+		});
+
+		gameFrame.addWindowClosingListener(new WindowAdapter(){
+			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+				out.println("QUIT");
+				alive=false;
+				out.close();
+				System.exit(0);
+			}
+		});
 	}
 
 	private void guessCharacter() {
