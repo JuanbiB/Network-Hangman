@@ -54,7 +54,6 @@ public class Hangman
 				}
 			}
 		});
-
 		/*  Action listener for a listen request.  Tell the RPSServer to
          listen for connections.
 		 */ 
@@ -70,6 +69,14 @@ public class Hangman
 					frame.writeMessage("Already connected");
 				else
 					frame.writeMessage("Already listening for connections");
+			}
+		});
+		
+		// TODO: How should we handle disconnecting?
+		frame.getDisconnectItem().addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				frame.writeMessage("Disconnected...");
 			}
 		});
 
