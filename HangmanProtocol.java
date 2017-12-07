@@ -122,7 +122,7 @@ public class HangmanProtocol
 	private void respondTo(String line){
 
 		String[] words = line.split(":", 2);	
-		if(words.length < 1) {
+		if(words.length <= 1) {
 			System.out.println("Blank line received");
 			return;
 		}
