@@ -31,6 +31,7 @@ public class HangmanProtocol
 	private int myScore = 0;
 	private int opponentScore = 0;
 	private static int sleepTime = 3000;
+	private int guessesLeft;
 
 	/* Hangman */
 	private boolean playerOne;
@@ -41,7 +42,7 @@ public class HangmanProtocol
 		this.playerOne = playerOne;
 		name = frame.getName();
 		matchFinished = false;
-
+		this.guessesLeft = GUESSTRIES;
 		addButtonListeners();
 
 		try {
@@ -120,7 +121,6 @@ public class HangmanProtocol
 	}
 
 	private void respondTo(String line){
-
 		String[] words = line.split(":", 2);	
 		if(words.length <= 1) {
 			System.out.println("Blank line received");
@@ -151,20 +151,24 @@ public class HangmanProtocol
 		else if(msgID.equals("GUESS")){
 			handleGuess(words);
 		}
-		else if (msgID.equals("FOUND")){
-			//int guessesLeft = Integer.parseInt(msg);
-			//drawStickFigure(guessesLeft);
-			gameFrame.writeMessage(msg);
-		}
-		// Here we would draw a body part of the stick man.
-		else if (msgID.equals("NOTFOUND")) {
-			int guessesLeft = Integer.parseInt(msg);
+		else if (msgID.equals("FOUND") || msgID.equals("NOTFOUND")){
+			if (msgID.equals("FOUND")){
+				gameFrame.writeMessage(msg);
+			}
+			else {
+				guessesLeft = Integer.parseInt(msg);
+				gameFrame.writeMessage("That letter doesn't exist in the word! You have " + msg + " tries left.");
+			}
 			drawStickFigure(guessesLeft);
-			gameFrame.writeMessage("That letter doesn't exist in the word. I have " + msg + " guesses left.");
 		}
+
 		else if (msgID.equals("WON") || msgID.equals("LOST")){
+			if (msgID.equals("LOST")) {
+				guessesLeft--;
+			}
+			drawStickFigure(guessesLeft);
 			gameFrame.writeMessage("\n" + msgID);
-			
+
 			if (msgID.equals("WON")) {
 				myScore++;
 			}
@@ -195,6 +199,7 @@ public class HangmanProtocol
 		
 	}
 
+	/* Only the word picker will execute this. */
 	private void handleGuess(String[] words) {
 		char guess = words[1].charAt(0);
 		if (wordToGuess.contains(guess + "")) {
@@ -212,7 +217,7 @@ public class HangmanProtocol
 				gameFrame.writeMessage("My score: " + Integer.toString(myScore));
 				gameFrame.writeMessage("Their score: " + Integer.toString(opponentScore));
 				
-				gameFrame.writeMessage("\nYou LOSE, they guessed your word(" + wordToGuess + ")\n Starting a new game as "
+				gameFrame.writeMessage("\nLOSE\n They guessed your word(" + wordToGuess + ")\n Starting a new game as "
 						+ "player two.\n"
 						+ "<--------------------->\n");
 				try {
@@ -237,6 +242,7 @@ public class HangmanProtocol
 				gameFrame.writeMessage("My score: " + Integer.toString(myScore));
 				gameFrame.writeMessage("Their score: " + Integer.toString(opponentScore));
 				out.println("LOST:The stick figure has been hung! The word was: " + wordToGuess);
+				drawStickFigure(guessTries);
 				try {
 					Thread.sleep(sleepTime);
 				} catch (InterruptedException e) {
